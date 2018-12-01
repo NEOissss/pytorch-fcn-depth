@@ -18,8 +18,6 @@ class NYUDv2Dataset(Dataset):
         # self.labels = torch.FloatTensor(mat['labels'])[:, :, self.cut[0]:self.cut[1]]
 
         self.images = self.images.transpose(0, 3).transpose(1, 2).transpose(2, 3)
-        self.images = self.transform(self.images)
-
         self.depths = self.depths.transpose(0, 2).transpose(1, 2).unsqueeze(1)
         # self.labels = self.labels.transpose(0, 2).transpose(1, 2).unsqueeze(1)
 
@@ -27,7 +25,7 @@ class NYUDv2Dataset(Dataset):
         return self.images.size(0)
 
     def __getitem__(self, idx):
-        return self.images[[idx]], self.depths[[idx]]
+        return self.transform(self.images[idx]), self.depths[idx]
 
 
 if __name__ == '__main__':
