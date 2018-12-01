@@ -13,9 +13,9 @@ class NYUDv2Dataset(Dataset):
 
         # Load data
         mat = hdf5storage.loadmat(self.file_path)
-        self.images = torch.FloatTensor(mat['images'])[:, :, :, self.cut[0], self.cut[1]]
-        self.depths = torch.FloatTensor(mat['depths'])[:, :, self.cut[0], self.cut[1]]
-        # self.labels = torch.FloatTensor(mat['labels'])[:, :, self.cut[0], self.cut[1]]
+        self.images = torch.FloatTensor(mat['images'])[:, :, :, self.cut[0]:self.cut[1]]
+        self.depths = torch.FloatTensor(mat['depths'])[:, :, self.cut[0]:self.cut[1]]
+        # self.labels = torch.FloatTensor(mat['labels'])[:, :, self.cut[0]:self.cut[1]]
 
         self.images = self.images.transpose(0, 3).transpose(1, 2).transpose(2, 3)
         self.images = self.transform(self.images)
