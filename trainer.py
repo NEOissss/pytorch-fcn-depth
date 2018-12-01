@@ -105,6 +105,7 @@ class FCNManager(object):
 def main():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--path', dest='path', type=str, default='nyu_depth_v2_labeled.mat', help='Dataset path')
     parser.add_argument('--param', dest='param', type=str, default=None, help='Initial net parameters.')
     parser.add_argument('--lr', dest='lr', type=float, default=0.001, help='Base learning rate for training.')
     parser.add_argument('--decay', dest='decay', type=float, default=0.01, help='Weight decay.')
@@ -129,6 +130,7 @@ def main():
         raise AttributeError('--epoch parameter must > 0.')
 
     data_opts = {'dataset': 'NYUDv2',
+                 'path': args.path,
                  'train_cut': [0, 800],
                  'test_cut': [900, None],
                  'val_cut': [800, 900]}

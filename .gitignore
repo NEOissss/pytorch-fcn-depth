@@ -187,3 +187,5 @@ venv.bak/
 
 .idea
 .idea/*
+
+nyu_depth_v2_labeled.mat

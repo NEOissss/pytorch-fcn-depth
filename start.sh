@@ -1,5 +1,7 @@
 #!/bin/sh
 
+path='nyu_depth_v2_labeled.mat'
+
 param=''
 #param='--n_param Triplet-param-467382378'
 
@@ -12,4 +14,4 @@ verbose='--verbose 1'
 valid='--valid'
 #valid='--no-valid'
 
-python3 fcn.py ${param} ${lr} ${decay} ${epoch} ${batch} ${verbose} ${valid}
+python3 fcn.py ${path} ${param} ${lr} ${decay} ${epoch} ${batch} ${verbose} ${valid}
