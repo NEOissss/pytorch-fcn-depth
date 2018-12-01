@@ -3,7 +3,7 @@
 path='nyu_depth_v2_labeled.mat'
 
 param=''
-#param='--n_param Triplet-param-467382378'
+#param='--n_param FCN8s-param-467382378'
 
 lr='--lr 0.001'
 decay='--decay 0.01'
