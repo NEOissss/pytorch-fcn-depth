@@ -1,14 +1,13 @@
 import hdf5storage
 import torch
 from torchvision.transforms import Normalize
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 
 class NYUDv2Dataset(Dataset):
-    def __init__(self, file_path, data_opts):
+    def __init__(self, data_path, cut):
         super(NYUDv2Dataset, self).__init__()
-        self.file_path = file_path
-        self.train = data_opts['train']
+        self.file_path = data_path
         self.cut = data_opts['cut']
         self.transform = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
