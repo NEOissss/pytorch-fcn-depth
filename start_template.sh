@@ -14,4 +14,4 @@ verbose='--verbose 1'
 valid='--valid'
 #valid='--no-valid'
 
-python3 fcn.py ${path} ${param} ${lr} ${decay} ${epoch} ${batch} ${verbose} ${valid}
+python trainer.py ${path} ${param} ${lr} ${decay} ${epoch} ${batch} ${verbose} ${valid}
