@@ -8,7 +8,7 @@ from dataloader import NYUDv2Dataset
 
 
 class FCNManager(object):
-    def __init__(self, data_opts, pretrain=True, param_path=None, lr=1e-3, decay=1e-2, batch=8, flip=True, val=True):
+    def __init__(self, data_opts, pretrain=True, param_path=None, lr=1e-3, decay=1e-2, batch=8, flip=False, val=True):
         self.batch = batch
         self.flip = flip
         self.batch = batch
