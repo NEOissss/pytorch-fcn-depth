@@ -35,6 +35,7 @@ class FCNManager(object):
                 if self.flip:
                     idx = torch.randperm(data.size(0))[:data.size(0) // 2]
                     data[idx] = data[idx].flip(3)
+                    depth[idx] = depth[idx].flip(3)
                 self.solver.zero_grad()
                 score = self.net(data)
                 loss = self.criterion(score, depth)
