@@ -14,12 +14,13 @@ class FCNManager(object):
         self.batch = batch
         self.val = val
 
-        self.net = FCN8s().cuda()
+        self.net = FCN8s()
         if init_weight:
             self.net.init_vgg16_params()
         if param_path:
             self.load_param(param_path)
-        self.criterion = torch.nn.MSELoss()
+        self.net = self.net.cuda()
+        self.criterion = torch.nn.MSELoss().cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True)
 
