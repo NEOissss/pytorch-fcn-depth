@@ -30,7 +30,7 @@ class NYUDv2Dataset(Dataset):
             depths = np.load(self.dir_path + self.file_list['depths'])
         else:
             images, depths = self.prep_data()
-        return images[self.cut[0], self.cut[1]], depths[self.cut[0], self.cut[1]]
+        return images[self.cut[0]:self.cut[1]], depths[self.cut[0]:self.cut[1]]
 
     def prep_data(self):
         mat = hdf5storage.loadmat(self.dir_path + '/nyu_depth_v2_labeled.mat')
