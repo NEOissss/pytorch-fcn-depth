@@ -104,17 +104,17 @@ class FCN8s(nn.Module):
         features = list(vgg16().features.children())
 
         for idx, conv_block in enumerate(blocks):
-            for l1, l2 in zip(features[ranges[idx][0] : ranges[idx][1]], conv_block):
+            for l1, l2 in zip(features[ranges[idx][0]: ranges[idx][1]], conv_block):
                 if isinstance(l1, nn.Conv2d) and isinstance(l2, nn.Conv2d):
                     assert l1.weight.size() == l2.weight.size()
                     assert l1.bias.size() == l2.bias.size()
                     l2.weight.data = l1.weight.data
                     l2.bias.data = l1.bias.data
-        for i in [0, 3, 6]:
-            torch.nn.init.kaiming_normal_(self.regressor[i].weight.data)
-            torch.nn.init.constant_(self.regressor[i].bias.data, val=0)
-        # for i1, i2 in zip([0, 3], [0, 3]):
-        #     l1 = vgg16().classifier[i1]
-        #     l2 = self.regressor[i2]
-        #     l2.weight.data = l1.weight.data.view(l2.weight.size())
-        #     l2.bias.data = l1.bias.data.view(l2.bias.size())
+        # for i in [0, 3, 6]:
+        #     torch.nn.init.kaiming_normal_(self.regressor[i].weight.data)
+        #     torch.nn.init.constant_(self.regressor[i].bias.data, val=0)
+        for i1, i2 in zip([0, 3], [0, 3]):
+            l1 = vgg16().classifier[i1]
+            l2 = self.regressor[i2]
+            l2.weight.data = l1.weight.data.view(l2.weight.size())
+            l2.bias.data = l1.bias.data.view(l2.bias.size())
