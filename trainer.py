@@ -14,7 +14,7 @@ class FCNManager(object):
         self.batch = batch
         self.val = val
 
-        self.net = FCN8s()
+        self.net = FCN8s().cuda()
         if init_weight:
             self.net.init_vgg16_params()
         if param_path:
