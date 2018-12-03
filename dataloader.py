@@ -22,7 +22,7 @@ class NYUDv2Dataset(Dataset):
         return self.images.shape[0]
 
     def __getitem__(self, idx):
-        return self.transform(self.images[idx]), from_numpy(self.depths[idx])
+        return self.transform(self.images[idx]).cuda(), from_numpy(self.depths[idx]).cuda()
 
     def load_data(self):
         if all([os.path.exists(self.dir_path + i) for i in self.file_list.values()]):
