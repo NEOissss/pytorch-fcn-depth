@@ -1,6 +1,6 @@
 #!/bin/sh
 
-path='--path nyu_depth_v2_labeled.mat'
+path='--path data/'
 
 param=''
 #param='--n_param FCN8s-param-467382378'
@@ -8,7 +8,7 @@ param=''
 lr='--lr 0.001'
 decay='--decay 0.01'
 epoch='--epoch 1'
-batch='--batch 128'
+batch='--batch 32'
 verbose='--verbose 1'
 
 valid='--valid'
