@@ -110,7 +110,11 @@ class FCN8s(nn.Module):
                     assert l1.bias.size() == l2.bias.size()
                     l2.weight.data = l1.weight.data
                     l2.bias.data = l1.bias.data
-
         for i in [0, 3, 6]:
             torch.nn.init.kaiming_normal_(self.regressor[i].weight.data)
             torch.nn.init.constant_(self.regressor[i].bias.data, val=0)
+        # for i1, i2 in zip([0, 3], [0, 3]):
+        #     l1 = vgg16().classifier[i1]
+        #     l2 = self.regressor[i2]
+        #     l2.weight.data = l1.weight.data.view(l2.weight.size())
+        #     l2.bias.data = l1.bias.data.view(l2.bias.size())
