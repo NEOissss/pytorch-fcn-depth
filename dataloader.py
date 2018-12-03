@@ -34,7 +34,7 @@ class NYUDv2Dataset(Dataset):
 
     def prep_data(self):
         mat = hdf5storage.loadmat(self.dir_path + '/nyu_depth_v2_labeled.mat')
-        images = np.array(mat['images']).transpose((3, 2, 0, 1)).copy()
+        images = np.array(mat['images']).transpose((3, 0, 1, 2)).copy()
         depths = np.expand_dims(np.array(mat['depths']).transpose((2, 0, 1)), 1).copy()
         labels = np.expand_dims(np.array(mat['labels']).transpose((2, 0, 1)), 1).copy()
         np.save(self.dir_path + self.file_list['images'], images)
