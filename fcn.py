@@ -114,7 +114,7 @@ class FCN8s(nn.Module):
                         l2.bias.data = l1.bias.data
             for i1, i2 in zip([0, 3], [0, 3]):
                 l1 = vgg16().classifier[i1]
-                l2 = self.regressor[i2]
+                l2 = self.score_pool5[i2]
                 l2.weight.data = l1.weight.data.view(l2.weight.size())
                 l2.bias.data = l1.bias.data.view(l2.bias.size())
         else:
