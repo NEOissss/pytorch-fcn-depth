@@ -110,7 +110,7 @@ def main():
     parser.add_argument('--lr', dest='lr', type=float, default=0.001, help='Base learning rate for training.')
     parser.add_argument('--decay', dest='decay', type=float, default=0.01, help='Weight decay.')
 
-    parser.add_argument('--batch', dest='batch', type=int, default=256, help='Batch size.')
+    parser.add_argument('--batch', dest='batch', type=int, default=16, help='Batch size.')
     parser.add_argument('--epoch', dest='epoch', type=int, default=10, help='Epochs for training.')
     parser.add_argument('--verbose', dest='verbose', type=int, default=1, help='Printing frequency setting.')
 
