@@ -22,7 +22,7 @@ class FCNManager(object):
         self.net = self.net.cuda()
         self.criterion = torch.nn.MSELoss().cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=100)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
 
         self.data_opts = data_opts
         self.train_data_loader, self.test_data_loader, self.val_data_loader = self.data_loader()
@@ -49,10 +49,12 @@ class FCNManager(object):
 
                 if self.val:
                     val_loss = self.test(val=True)
-                    self.scheduler.step(val_loss)
 
                 if verbose and iter_num % verbose == 0:
                     print('Batch: {:d}, Batch loss: {:.4f}, Val loss: {:.2f}'.format(iter_num, loss.item(), val_loss.item()))
+
+            if self.val:
+                self.scheduler.step(val_loss)
 
         self.loss_stats = np.array(self.loss_stats)
         self.save()
