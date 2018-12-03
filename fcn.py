@@ -70,7 +70,7 @@ class FCN8s(nn.Module):
         self.upscore4 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 16, stride=8)
 
-        self.init_vgg16_params(pretrain=pretrain)
+        self.init_params(pretrain=pretrain)
 
     def forward(self, x):
         conv1 = self.conv_block1(x)
