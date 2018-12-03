@@ -8,25 +8,21 @@ from dataloader import NYUDv2Dataset
 
 
 class FCNManager(object):
-    def __init__(self, data_opts, init_weight=True, param_path=None, lr=1e-3, decay=1e-2, batch=8, flip=True, val=True):
+    def __init__(self, data_opts, pretrain=True, param_path=None, lr=1e-3, decay=1e-2, batch=8, flip=True, val=True):
         self.batch = batch
         self.flip = flip
         self.batch = batch
         self.val = val
 
-        self.net = FCN8s()
-        if init_weight:
-            self.net.init_vgg16_params()
+        self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain)).cuda()
         if param_path:
             self.load_param(param_path)
-        self.net = self.net.cuda()
         self.criterion = torch.nn.MSELoss().cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
 
         self.data_opts = data_opts
         self.train_data_loader, self.test_data_loader, self.val_data_loader = self.data_loader()
-
         self.loss_stats = []
 
     def train(self, epoch=1, verbose=None):
