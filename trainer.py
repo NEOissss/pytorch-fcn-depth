@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from fcn import FCN8s
-from loss import CombinedLoss, CombinedLoss_test
+from loss import Conv_MSELoss, Discrete_CELoss
 from dataset import NYUDv2Dataset
 
 
@@ -21,19 +21,25 @@ class FCNManager(object):
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
         if param_path:
             self.load_param(param_path)
-        # self.criterion = torch.nn.MSELoss().cuda()
-        self.criterion = CombinedLoss(self.net.module.final_score, self.writer, self.granularity).cuda()
-        self.criterion_test = CombinedLoss_test(self.net.module.final_score, self.granularity).cuda()
+
+        self.criterion_mse = Conv_MSELoss(self.net.module.final_score, self.granularity).cuda()
+        self.criterion_ce = Discrete_CELoss(self.granularity).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True)
 
         self.data_opts = data_opts
         self.train_data_loader, self.test_data_loader, self.val_data_loader = self.data_loader()
 
-    def train(self, epoch=1, verbose=None):
+    def train(self, epoch=1, loss_type='CE'):
         print('Training.')
+        if loss_type == 'CE':
+            criterion = self.criterion_ce
+        elif loss_type == 'MSE':
+            criterion = self.criterion_mse
+        else:
+            raise ValueError('Unknown Loss!')
+
         for t in range(epoch):
-            # print("\nEpoch: {:d}".format(t + 1))
             iter_num = 0
             for data, depth in iter(self.train_data_loader):
                 if self.flip:
@@ -42,33 +48,41 @@ class FCNManager(object):
                     depth[idx] = depth[idx].flip(3)
                 self.solver.zero_grad()
                 score = self.net(data)
-                loss = self.criterion(score, depth)
+                loss = criterion(score, depth)
+                self.writer.add_scalar('train_loss/' + loss_type, loss.item())
                 loss.backward()
                 self.solver.step()
                 iter_num += 1
 
             if self.val:
                 val_loss = self.test(val=True)
-                self.writer.add_scalar('val_loss/MSE', val_loss.item())
+                self.writer.add_scalar('val_loss/' + loss_type, val_loss.item())
                 self.scheduler.step(val_loss)
 
-    def test(self, val=False):
+    def test(self, val=False, loss_type='CE'):
         if val:
             data_loader = self.val_data_loader
         else:
             data_loader = self.test_data_loader
             print('Testing.')
 
+        if loss_type == 'CE':
+            criterion = self.criterion_ce
+        elif loss_type == 'MSE':
+            criterion = self.criterion_mse
+        else:
+            raise ValueError('Unknown Loss!')
+
         self.net.eval()
         loss_list = []
 
         for data, depth in iter(data_loader):
             score = self.net(data)
-            loss = self.criterion_test(score, depth)
+            loss = criterion(score, depth)
             loss_list.append(loss.item())
 
         if not val:
-            self.writer.add_scalar('test_loss/MSE', np.mean(loss_list).item())
+            self.writer.add_scalar('test_loss/' + loss_type, np.mean(loss_list).item())
 
         self.net.train()
         return np.mean(loss_list)
@@ -140,7 +154,8 @@ def main():
     print('Learning rate scheduler used!\n')
 
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
-    fcn.train(epoch=args.epoch, verbose=args.verbose)
+    fcn.train(epoch=args.epoch, loss_type='CE')
+    fcn.train(epoch=args.epoch, loss_type='CE')
     fcn.test()
     fcn.save()
 
