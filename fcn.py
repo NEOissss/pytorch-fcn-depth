@@ -84,7 +84,7 @@ class FCN8s(nn.Module):
         self.upscore4 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 16, stride=8)
 
-        self.final_score = nn.Conv2d(output_size, 1, 65, padding=32)
+        self.final_score = nn.Conv2d(1, 1, 65, padding=32)
 
         self.init_params(pretrain=pretrain)
 
