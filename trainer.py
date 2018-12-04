@@ -30,7 +30,7 @@ class FCNManager(object):
         self.data_opts = data_opts
         self.train_data_loader, self.test_data_loader, self.val_data_loader = self.data_loader()
 
-    def train(self, epoch=1, loss_type='CE'):
+    def train(self, epoch=1, loss_type='CE', lr=None):
         print('Training.')
         if loss_type == 'CE':
             criterion = self.criterion_ce
@@ -38,6 +38,10 @@ class FCNManager(object):
             criterion = self.criterion_mse
         else:
             raise ValueError('Unknown Loss!')
+
+        if lr:
+            for g in self.solver.param_groups:
+                g['lr'] = lr
 
         for t in range(epoch):
             iter_num = 0
@@ -156,7 +160,7 @@ def main():
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
     fcn.train(epoch=args.epoch, loss_type='CE')
     fcn.test()
-    fcn.train(epoch=args.epoch, loss_type='MSE')
+    fcn.train(epoch=args.epoch, loss_type='MSE', lr=args.lr)
     fcn.test()
     fcn.save()
 
