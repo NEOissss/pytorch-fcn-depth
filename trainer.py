@@ -53,7 +53,7 @@ class FCNManager(object):
                 if self.val:
                     val_loss = self.test(val=True)
 
-                if verbose and iter_num % verbose == 0:
+                if self.val and verbose and iter_num % verbose == 0:
                     print('Validation MSELoss: {:.2f}'.format(val_loss.item()))
 
             if self.val:
