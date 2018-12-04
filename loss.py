@@ -3,13 +3,15 @@ import torch.nn as nn
 
 
 class CombinedLoss(nn.Module):
-    def __init__(self, conv):
+    def __init__(self, conv, granularity=100):
         super(CombinedLoss, self).__init__()
         self.conv = conv
+        self.granularity = granularity
         self.criterion1 = torch.nn.CrossEntropyLoss()
         self.criterion2 = torch.nn.MSELoss()
 
     def forward(self, x, gt):
+        gt = gt * self.granularity
         int_gt = gt.type(torch.LongTensor).cuda()
         loss1 = self.criterion1(x, int_gt)
         int_x = x.max(dim=1)[1]

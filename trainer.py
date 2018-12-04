@@ -14,12 +14,13 @@ class FCNManager(object):
         self.flip = flip
         self.batch = batch
         self.val = val
+        self.granularity = 100
 
-        self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain)).cuda()
+        self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
         if param_path:
             self.load_param(param_path)
         # self.criterion = torch.nn.MSELoss().cuda()
-        self.criterion = CombinedLoss(self.net.module.final_score).cuda()
+        self.criterion = CombinedLoss(self.net.module.final_score, self.granularity).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
 
