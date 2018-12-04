@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from fcn import FCN8s
+from loss import CombinedLoss
 from dataloader import NYUDv2Dataset
 
 
@@ -17,7 +18,8 @@ class FCNManager(object):
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain)).cuda()
         if param_path:
             self.load_param(param_path)
-        self.criterion = torch.nn.MSELoss().cuda()
+        # self.criterion = torch.nn.MSELoss().cuda()
+        self.criterion = CombinedLoss(self.net.module.final_score).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
 

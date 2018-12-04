@@ -1,7 +1,7 @@
 import os
 import hdf5storage
 import numpy as np
-from torch import from_numpy
+from torch import from_numpy, LongTensor
 from torchvision.transforms import Compose, ToTensor, Normalize
 from torch.utils.data import Dataset
 

@@ -4,7 +4,7 @@ from torchvision.models import vgg16
 
 
 class FCN8s(nn.Module):
-    def __init__(self, pretrain=True, output_size=10):
+    def __init__(self, pretrain=True, output_size=1000):
         super(FCN8s, self).__init__()
 
         self.conv_block1 = nn.Sequential(
@@ -70,6 +70,8 @@ class FCN8s(nn.Module):
         self.upscore4 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 16, stride=8)
 
+        self.final_score = nn.Conv2d(output_size, 1, 65, padding=32)
+
         self.init_params(pretrain=pretrain)
 
     def forward(self, x):
@@ -92,6 +94,7 @@ class FCN8s(nn.Module):
 
         out = self.upscore3(score3)
         out = out[:, :, 31:31 + x.size()[2], 31:31 + x.size()[3]].contiguous()
+
         return out
 
     def init_params(self, pretrain=True):
