@@ -55,7 +55,7 @@ class FCNManager(object):
                 iter_num += 1
 
             if self.val:
-                val_loss = self.test(val=True)
+                val_loss = self.test(val=True, loss_type=loss_type)
                 self.writer.add_scalar('val_loss/' + loss_type, val_loss.item(), t)
                 self.scheduler.step(val_loss)
 
