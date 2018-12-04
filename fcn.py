@@ -89,8 +89,6 @@ class FCN8s(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(32, 32, 3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(32, 32, 3, padding=1),
-            nn.ReLU(inplace=True),
             nn.Conv2d(32, 1, 3, padding=1),
         )
 
@@ -163,8 +161,8 @@ class FCN8s(nn.Module):
             torch.nn.init.kaiming_normal_(layer.weight.data)
             torch.nn.init.constant_(layer.bias.data, val=0)
 
-        for i in [0, 2, 4, 6]:
-            torch.nn.init.constant_(self.final_score[i].weight.data, val=1/self.final_score[i].weight.size(2)**2)
+        for i in [0, 2, 4]:
+            torch.nn.init.kaiming_normal_(self.final_score[i].weight.data)
             torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
         # initialize upscore layer

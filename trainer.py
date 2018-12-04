@@ -25,7 +25,7 @@ class FCNManager(object):
         self.criterion = CombinedLoss(self.net.module.final_score, self.writer, self.granularity).cuda()
         self.criterion_test = CombinedLoss_test(self.net.module.final_score, self.granularity).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True)
 
         self.data_opts = data_opts
         self.train_data_loader, self.test_data_loader, self.val_data_loader = self.data_loader()
@@ -51,8 +51,6 @@ class FCNManager(object):
                 val_loss = self.test(val=True)
                 self.writer.add_scalar('val_loss/MSE', val_loss.item())
                 self.scheduler.step(val_loss)
-
-        self.save()
 
     def test(self, val=False):
         if val:
