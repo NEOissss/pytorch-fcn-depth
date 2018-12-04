@@ -36,14 +36,12 @@ class FCNManager(object):
             # print("\nEpoch: {:d}".format(t + 1))
             iter_num = 0
             for data, depth in iter(self.train_data_loader):
-                # print('Batch: {:d}'.format(iter_num), end=' ')
                 if self.flip:
                     idx = torch.randperm(data.size(0))[:data.size(0) // 2]
                     data[idx] = data[idx].flip(3)
                     depth[idx] = depth[idx].flip(3)
                 self.solver.zero_grad()
                 score = self.net(data)
-                # print('Training loss:', end=' ')
                 loss = self.criterion(score, depth)
                 loss.backward()
                 self.solver.step()
