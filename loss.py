@@ -6,11 +6,11 @@ class CombinedLoss(nn.Module):
     def __init__(self, conv):
         super(CombinedLoss, self).__init__()
         self.conv = conv
-        self.criterion1 = torch.nn.CrossEntropyLoss().cuda()
-        self.criterion2 = torch.nn.MSELoss().cuda()
+        self.criterion1 = torch.nn.CrossEntropyLoss()
+        self.criterion2 = torch.nn.MSELoss()
 
     def forward(self, x, gt):
-        int_gt = gt.type(torch.LongTensor)
+        int_gt = gt.type(torch.LongTensor).cuda()
         loss1 = self.criterion1(x, int_gt)
         int_x = x.max(dim=1)[1]
         est_x = self.conv(int_x)
