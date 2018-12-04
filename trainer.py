@@ -15,7 +15,7 @@ class FCNManager(object):
         self.flip = flip
         self.batch = batch
         self.val = val
-        self.granularity = 100
+        self.granularity = 200
         self.writer = SummaryWriter()
 
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
@@ -29,11 +29,9 @@ class FCNManager(object):
 
         self.data_opts = data_opts
         self.train_data_loader, self.test_data_loader, self.val_data_loader = self.data_loader()
-        self.loss_stats = []
 
     def train(self, epoch=1, verbose=None):
         print('Training.')
-        self.loss_stats = []
         for t in range(epoch):
             # print("\nEpoch: {:d}".format(t + 1))
             iter_num = 0
@@ -47,24 +45,15 @@ class FCNManager(object):
                 score = self.net(data)
                 # print('Training loss:', end=' ')
                 loss = self.criterion(score, depth)
-                self.loss_stats.append(loss.item())
                 loss.backward()
                 self.solver.step()
                 iter_num += 1
 
-                if self.val:
-                    val_loss = self.test(val=True)
-                    self.writer.add_scalar('val_loss/MSE', val_loss.item())
-
-                # if self.val and verbose and iter_num % verbose == 0:
-                #     print('Validation MSELoss: {:.2f}'.format(val_loss.item()))
-                # else:
-                #     print()
-
             if self.val:
+                val_loss = self.test(val=True)
+                self.writer.add_scalar('val_loss/MSE', val_loss.item())
                 self.scheduler.step(val_loss)
 
-        self.loss_stats = np.array(self.loss_stats)
         self.save()
 
     def test(self, val=False):
@@ -84,8 +73,8 @@ class FCNManager(object):
 
         if not val:
             self.writer.add_scalar('test_loss/MSE', np.mean(loss_list).item())
-            # print('Test MSE loss: {:f}'.format(np.mean(loss_list)))
 
+        self.net.train()
         return np.mean(loss_list)
 
     def data_loader(self):
@@ -103,10 +92,9 @@ class FCNManager(object):
         net_path = 'FCN8s-param-' + timestamp
         torch.save(self.net.state_dict(), net_path)
         print('FCN model parameters saved: ' + net_path)
-        # stats_path = 'train_stats_' + timestamp
-        # np.save(stats_path, self.loss_stats)
-        # print('Training stats saved: ' + stats_path + '.npy\n')
-        self.writer.export_scalars_to_json('all_scalars' + timestamp + '.json')
+        json_path = 'all_scalars' + timestamp + '.json'
+        self.writer.export_scalars_to_json(json_path)
+        print('Exp stats saved: ' + json_path)
         self.writer.close()
 
     def load_param(self, path):
@@ -158,6 +146,7 @@ def main():
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
     fcn.train(epoch=args.epoch, verbose=args.verbose)
     fcn.test()
+    fcn.save()
 
 
 if __name__ == '__main__':

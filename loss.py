@@ -20,8 +20,7 @@ class CombinedLoss(nn.Module):
         loss2 = self.criterion2(est_x, gt)
         self.writer.add_scalar('train_loss/CrossEntropy', loss1.item())
         self.writer.add_scalar('train_loss/MSE', loss2.item())
-        # print('CrossEntropyLoss: {:f}, MSELoss: {:f}'.format(loss1.item(), loss2.item()), end=' ')
-        return loss1 + 0.1 * loss2
+        return loss1 + loss2
 
 
 class CombinedLoss_test(nn.Module):

@@ -84,7 +84,19 @@ class FCN8s(nn.Module):
         self.upscore4 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 16, stride=8)
 
-        self.final_score = nn.Conv2d(1, 1, 65, padding=32)
+        self.final_score = nn.Sequential(
+            nn.Conv2d(1, 32, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 64, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 32, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 1, 3, padding=1)
+        )
 
         self.init_params(pretrain=pretrain)
 
@@ -155,8 +167,9 @@ class FCN8s(nn.Module):
             torch.nn.init.kaiming_normal_(layer.weight.data)
             torch.nn.init.constant_(layer.bias.data, val=0)
 
-        torch.nn.init.kaiming_normal_(self.final_score.weight.data)
-        torch.nn.init.constant_(self.final_score.bias.data, val=0)
+        for i in [0 ,2, 4, 6, 8, 10]:
+            torch.nn.init.kaiming_normal_(self.final_score[i].weight.data)
+            torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
         # initialize upscore layer
         c1, c2, h, w = self.upscore5.weight.data.size()
