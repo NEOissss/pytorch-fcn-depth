@@ -14,7 +14,7 @@ class CombinedLoss(nn.Module):
         gt = gt * self.granularity
         int_gt = gt.type(torch.cuda.LongTensor)[0]
         loss1 = self.criterion1(x, int_gt)
-        int_x = torch.unsqueeze(x.max(dim=1)[1], 0).type(torch.cuda.FloatTensor)
+        int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
         est_x = self.conv(int_x)
         loss2 = self.criterion2(est_x, gt)
         print('CrossEntropyLoss: {:f}, MSELoss: {:f}'.format(loss1.item(), loss2.item()))
@@ -30,7 +30,7 @@ class CombinedLoss_test(nn.Module):
 
     def forward(self, x, gt):
         gt = gt * self.granularity
-        int_x = torch.unsqueeze(x.max(dim=1)[1], 0).type(torch.cuda.FloatTensor)
+        int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
         est_x = self.conv(int_x)
         loss = self.criterion(est_x, gt)
         return loss

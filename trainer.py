@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from fcn import FCN8s
-from loss import CombinedLoss
+from loss import CombinedLoss, CombinedLoss_test
 from dataset import NYUDv2Dataset
 
 
@@ -21,6 +21,7 @@ class FCNManager(object):
             self.load_param(param_path)
         # self.criterion = torch.nn.MSELoss().cuda()
         self.criterion = CombinedLoss(self.net.module.final_score, self.granularity).cuda()
+        self.criterion_test = CombinedLoss_test(self.net.module.final_score, self.granularity).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
 
@@ -35,13 +36,14 @@ class FCNManager(object):
             print("\nEpoch: {:d}".format(t + 1))
             iter_num = 0
             for data, depth in iter(self.train_data_loader):
+                print('Batch: {:d}'.format(iter_num))
                 if self.flip:
                     idx = torch.randperm(data.size(0))[:data.size(0) // 2]
                     data[idx] = data[idx].flip(3)
                     depth[idx] = depth[idx].flip(3)
                 self.solver.zero_grad()
                 score = self.net(data)
-                print('Training loss:')
+                print('Training loss:', end=' ')
                 loss = self.criterion(score, depth)
                 self.loss_stats.append(loss.item())
                 loss.backward()
@@ -49,11 +51,10 @@ class FCNManager(object):
                 iter_num += 1
 
                 if self.val:
-                    print('Validation loss:')
                     val_loss = self.test(val=True)
 
-                # if verbose and iter_num % verbose == 0:
-                #     print('Batch: {:d}, Batch loss: {:.4f}, Val loss: {:.2f}'.format(iter_num, loss.item(), val_loss.item()))
+                if verbose and iter_num % verbose == 0:
+                    print('Validation MSELoss: {:.2f}'.format(val_loss.item()))
 
             if self.val:
                 self.scheduler.step(val_loss)
@@ -73,7 +74,7 @@ class FCNManager(object):
 
         for data, depth in iter(data_loader):
             score = self.net(data)
-            loss = self.criterion(score, depth)
+            loss = self.criterion_test(score, depth)
             loss_list.append(loss.item())
 
         if not val:
