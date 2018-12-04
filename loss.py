@@ -17,7 +17,7 @@ class CombinedLoss(nn.Module):
         int_x = torch.unsqueeze(x.max(dim=1)[1], 0).type(torch.cuda.FloatTensor)
         est_x = self.conv(int_x)
         loss2 = self.criterion2(est_x, gt)
-        print('CrossEntropyLoss: {%f}, MSELoss: {:f}'.format(loss1.item(), loss2.item()))
+        print('CrossEntropyLoss: {:f}, MSELoss: {:f}'.format(loss1.item(), loss2.item()))
         return loss1 + loss2
 
 
