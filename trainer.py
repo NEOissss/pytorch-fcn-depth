@@ -49,14 +49,14 @@ class FCNManager(object):
                 self.solver.zero_grad()
                 score = self.net(data)
                 loss = criterion(score, depth)
-                self.writer.add_scalar('train_loss/' + loss_type, loss.item())
+                self.writer.add_scalar('train_loss/' + loss_type, loss.item(), t*len(self.train_data_loader)+iter_num)
                 loss.backward()
                 self.solver.step()
                 iter_num += 1
 
             if self.val:
                 val_loss = self.test(val=True)
-                self.writer.add_scalar('val_loss/' + loss_type, val_loss.item())
+                self.writer.add_scalar('val_loss/' + loss_type, val_loss.item(), t)
                 self.scheduler.step(val_loss)
 
     def test(self, val=False, loss_type='CE'):
@@ -155,7 +155,8 @@ def main():
 
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
     fcn.train(epoch=args.epoch, loss_type='CE')
-    fcn.train(epoch=args.epoch, loss_type='CE')
+    fcn.test()
+    fcn.train(epoch=args.epoch, loss_type='MSE')
     fcn.test()
     fcn.save()
 
