@@ -3,10 +3,11 @@ import torch.nn as nn
 
 
 class CombinedLoss(nn.Module):
-    def __init__(self, conv, granularity=100):
+    def __init__(self, conv, writer, granularity=100):
         super(CombinedLoss, self).__init__()
         self.conv = conv
         self.granularity = granularity / 10
+        self.writer = writer
         self.criterion1 = torch.nn.CrossEntropyLoss()
         self.criterion2 = torch.nn.MSELoss()
 
@@ -17,8 +18,10 @@ class CombinedLoss(nn.Module):
         int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
         est_x = self.conv(int_x)
         loss2 = self.criterion2(est_x, gt)
-        print('CrossEntropyLoss: {:f}, MSELoss: {:f}'.format(loss1.item(), loss2.item()), end=' ')
-        return loss1 + loss2
+        self.writer.add_scalar('train_loss/CrossEntropy', loss1.item())
+        self.writer.add_scalar('train_loss/MSE', loss2.item())
+        # print('CrossEntropyLoss: {:f}, MSELoss: {:f}'.format(loss1.item(), loss2.item()), end=' ')
+        return loss1 + 0.1 * loss2
 
 
 class CombinedLoss_test(nn.Module):

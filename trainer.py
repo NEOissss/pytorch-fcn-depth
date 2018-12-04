@@ -1,8 +1,9 @@
 import argparse
-import datetime
+from datetime import datetime
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from tensorboardX import SummaryWriter
 from fcn import FCN8s
 from loss import CombinedLoss, CombinedLoss_test
 from dataset import NYUDv2Dataset
@@ -15,12 +16,13 @@ class FCNManager(object):
         self.batch = batch
         self.val = val
         self.granularity = 100
+        self.writer = SummaryWriter()
 
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
         if param_path:
             self.load_param(param_path)
         # self.criterion = torch.nn.MSELoss().cuda()
-        self.criterion = CombinedLoss(self.net.module.final_score, self.granularity).cuda()
+        self.criterion = CombinedLoss(self.net.module.final_score, self.writer, self.granularity).cuda()
         self.criterion_test = CombinedLoss_test(self.net.module.final_score, self.granularity).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True, patience=5)
@@ -33,17 +35,17 @@ class FCNManager(object):
         print('Training.')
         self.loss_stats = []
         for t in range(epoch):
-            print("\nEpoch: {:d}".format(t + 1))
+            # print("\nEpoch: {:d}".format(t + 1))
             iter_num = 0
             for data, depth in iter(self.train_data_loader):
-                print('Batch: {:d}'.format(iter_num), end=' ')
+                # print('Batch: {:d}'.format(iter_num), end=' ')
                 if self.flip:
                     idx = torch.randperm(data.size(0))[:data.size(0) // 2]
                     data[idx] = data[idx].flip(3)
                     depth[idx] = depth[idx].flip(3)
                 self.solver.zero_grad()
                 score = self.net(data)
-                print('Training loss:', end=' ')
+                # print('Training loss:', end=' ')
                 loss = self.criterion(score, depth)
                 self.loss_stats.append(loss.item())
                 loss.backward()
@@ -52,11 +54,12 @@ class FCNManager(object):
 
                 if self.val:
                     val_loss = self.test(val=True)
+                    self.writer.add_scalar('val_loss/MSE', val_loss.item())
 
-                if self.val and verbose and iter_num % verbose == 0:
-                    print('Validation MSELoss: {:.2f}'.format(val_loss.item()))
-                else:
-                    print()
+                # if self.val and verbose and iter_num % verbose == 0:
+                #     print('Validation MSELoss: {:.2f}'.format(val_loss.item()))
+                # else:
+                #     print()
 
             if self.val:
                 self.scheduler.step(val_loss)
@@ -80,7 +83,8 @@ class FCNManager(object):
             loss_list.append(loss.item())
 
         if not val:
-            print('Test MSE loss: {:f}'.format(np.mean(loss_list)))
+            self.writer.add_scalar('test_loss/MSE', np.mean(loss_list).item())
+            # print('Test MSE loss: {:f}'.format(np.mean(loss_list)))
 
         return np.mean(loss_list)
 
@@ -97,11 +101,13 @@ class FCNManager(object):
     def save(self):
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         net_path = 'FCN8s-param-' + timestamp
-        stats_path = 'train_stats_' + timestamp
         torch.save(self.net.state_dict(), net_path)
-        np.save(stats_path, self.loss_stats)
         print('FCN model parameters saved: ' + net_path)
-        print('Training stats saved: ' + stats_path + '.npy\n')
+        # stats_path = 'train_stats_' + timestamp
+        # np.save(stats_path, self.loss_stats)
+        # print('Training stats saved: ' + stats_path + '.npy\n')
+        self.writer.export_scalars_to_json('all_scalars' + timestamp + '.json')
+        self.writer.close()
 
     def load_param(self, path):
         self.net.load_state_dict(torch.load(path))
