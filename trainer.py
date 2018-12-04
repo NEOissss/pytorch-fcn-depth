@@ -15,7 +15,7 @@ class FCNManager(object):
         self.flip = flip
         self.batch = batch
         self.val = val
-        self.granularity = 100
+        self.granularity = 64
         self.writer = SummaryWriter()
 
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
