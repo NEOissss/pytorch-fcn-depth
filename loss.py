@@ -6,7 +6,7 @@ class CombinedLoss(nn.Module):
     def __init__(self, conv, granularity=100):
         super(CombinedLoss, self).__init__()
         self.conv = conv
-        self.granularity = granularity
+        self.granularity = granularity / 10
         self.criterion1 = torch.nn.CrossEntropyLoss()
         self.criterion2 = torch.nn.MSELoss()
 
@@ -14,6 +14,7 @@ class CombinedLoss(nn.Module):
         gt = gt * self.granularity
         int_gt = gt.type(torch.LongTensor).cuda()
         loss1 = self.criterion1(x, int_gt)
+        print(x.size())
         int_x = x.max(dim=1)[1]
         est_x = self.conv(int_x)
         loss2 = self.criterion2(est_x, gt)
