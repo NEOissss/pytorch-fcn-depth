@@ -55,6 +55,8 @@ class FCNManager(object):
 
                 if self.val and verbose and iter_num % verbose == 0:
                     print('Validation MSELoss: {:.2f}'.format(val_loss.item()))
+                else:
+                    print()
 
             if self.val:
                 self.scheduler.step(val_loss)
