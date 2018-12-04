@@ -158,8 +158,8 @@ def main():
     print('Learning rate scheduler used!\n')
 
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
-    fcn.train(epoch=args.epoch, loss_type='CE')
-    fcn.test()
+    # fcn.train(epoch=args.epoch, loss_type='CE')
+    # fcn.test()
     fcn.train(epoch=args.epoch, loss_type='MSE', lr=args.lr)
     fcn.test()
     fcn.save()

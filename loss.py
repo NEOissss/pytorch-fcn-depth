@@ -11,8 +11,7 @@ class Conv_MSELoss(nn.Module):
 
     def forward(self, x, gt):
         gt = gt * self.granularity
-        int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
-        est_x = self.conv(int_x)
+        est_x = self.conv(x)
         return self.criterion(est_x, gt)
 
 
@@ -24,7 +23,7 @@ class Discrete_CELoss(nn.Module):
 
     def forward(self, x, gt):
         gt = gt * self.granularity
-        int_gt = gt.type(torch.cuda.LongTensor)[0]
+        int_gt = gt.type(torch.cuda.LongTensor)[1]
         return self.criterion(x, int_gt)
 
 
