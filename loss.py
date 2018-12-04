@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class CombinedLoss(nn.Module):
     def __init__(self, conv, granularity=100):
-        super(CombinedLoss_train, self).__init__()
+        super(CombinedLoss, self).__init__()
         self.conv = conv
         self.granularity = granularity / 10
         self.criterion1 = torch.nn.CrossEntropyLoss()
