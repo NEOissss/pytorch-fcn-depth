@@ -41,6 +41,7 @@ class FCNManager(object):
                     depth[idx] = depth[idx].flip(3)
                 self.solver.zero_grad()
                 score = self.net(data)
+                print('Training loss:')
                 loss = self.criterion(score, depth)
                 self.loss_stats.append(loss.item())
                 loss.backward()
@@ -48,10 +49,11 @@ class FCNManager(object):
                 iter_num += 1
 
                 if self.val:
+                    print('Validation loss:')
                     val_loss = self.test(val=True)
 
-                if verbose and iter_num % verbose == 0:
-                    print('Batch: {:d}, Batch loss: {:.4f}, Val loss: {:.2f}'.format(iter_num, loss.item(), val_loss.item()))
+                # if verbose and iter_num % verbose == 0:
+                #     print('Batch: {:d}, Batch loss: {:.4f}, Val loss: {:.2f}'.format(iter_num, loss.item(), val_loss.item()))
 
             if self.val:
                 self.scheduler.step(val_loss)
