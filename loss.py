@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class CombinedLoss_train(nn.Module):
+class CombinedLoss(nn.Module):
     def __init__(self, conv, granularity=100):
         super(CombinedLoss_train, self).__init__()
         self.conv = conv
