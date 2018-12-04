@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 from fcn import FCN8s
 from loss import CombinedLoss
-from dataloader import NYUDv2Dataset
+from dataset import NYUDv2Dataset
 
 
 class FCNManager(object):
