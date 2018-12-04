@@ -163,7 +163,7 @@ class FCN8s(nn.Module):
         assert c1 == c2 == self.output_size
         assert h == w
         weight = get_upsample_filter(h)
-        self.upscore.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
+        self.upscore5.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
 
         c1, c2, h, w = self.upscore4.weight.data.size()
         assert c1 == c2 == self.output_size
@@ -175,4 +175,4 @@ class FCN8s(nn.Module):
         assert c1 == c2 == self.output_size
         assert h == w
         weight = get_upsample_filter(h)
-        self.upscore5.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
+        self.upscore3.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
