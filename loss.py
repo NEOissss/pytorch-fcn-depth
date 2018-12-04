@@ -12,9 +12,8 @@ class CombinedLoss(nn.Module):
 
     def forward(self, x, gt):
         gt = gt * self.granularity
-        int_gt = gt.type(torch.LongTensor).cuda()
+        int_gt = gt.type(torch.LongTensor)[0].cuda()
         loss1 = self.criterion1(x, int_gt)
-        print(x.size())
         int_x = x.max(dim=1)[1]
         est_x = self.conv(int_x)
         loss2 = self.criterion2(est_x, gt)
