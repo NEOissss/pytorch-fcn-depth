@@ -121,7 +121,7 @@ class FCN8s(nn.Module):
         ]
         if pretrain:
             ranges = [[0, 4], [5, 9], [10, 16], [17, 23], [24, 29]]
-            features = list(vgg16().features.children())
+            features = list(vgg16(pretrained=True).features.children())
             for idx, conv_block in enumerate(blocks):
                 for l1, l2 in zip(features[ranges[idx][0]: ranges[idx][1]], conv_block):
                     if isinstance(l1, nn.Conv2d) and isinstance(l2, nn.Conv2d):
@@ -130,11 +130,11 @@ class FCN8s(nn.Module):
                         l2.weight.data = l1.weight.data
                         l2.bias.data = l1.bias.data
             for i1, i2 in zip([0, 3], [0, 3]):
-                l1 = vgg16().classifier[i1]
+                l1 = vgg16(pretrained=True).classifier[i1]
                 l2 = self.score_pool5[i2]
                 l2.weight.data = l1.weight.data.view(l2.weight.size())
                 l2.bias.data = l1.bias.data.view(l2.bias.size())
-            l1 = vgg16.classifier[6]
+            l1 = vgg16(pretrained=True).classifier[6]
             l2 = self.score_pool5[6]
             l2.weight.data = l1.weight.data[:self.output_size, :].view(l2.weight.size())
             l2.bias.data = l1.bias.data[:self.output_size]
