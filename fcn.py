@@ -164,7 +164,7 @@ class FCN8s(nn.Module):
             torch.nn.init.constant_(layer.bias.data, val=0)
 
         for i in [0, 2, 4, 6]:
-            torch.nn.init.constant_(self.final_score[i].weight.data, val=1/self.final_score[i].weight.size[2]**2)
+            torch.nn.init.constant_(self.final_score[i].weight.data, val=1/self.final_score[i].weight.size(2)**2)
             torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
         # initialize upscore layer
