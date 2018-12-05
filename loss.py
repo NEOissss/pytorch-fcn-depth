@@ -60,18 +60,3 @@ class CombinedLoss(nn.Module):
         self.writer.add_scalar('train_loss/CrossEntropy', loss1.item())
         self.writer.add_scalar('train_loss/MSE', loss2.item())
         return loss1 + 0.1 * loss2
-
-
-class CombinedLoss_test(nn.Module):
-    def __init__(self, conv, granularity=100):
-        super(CombinedLoss_test, self).__init__()
-        self.conv = conv
-        self.granularity = granularity
-        self.criterion = torch.nn.MSELoss()
-
-    def forward(self, x, gt):
-        gt = gt * self.granularity
-        int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
-        est_x = self.conv(int_x)
-        loss = self.criterion(est_x, gt)
-        return loss

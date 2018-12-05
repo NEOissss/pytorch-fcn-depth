@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from fcn import FCN8s
-from loss import Conv_MSELoss, Discrete_CELoss
+from loss import *
 from dataset import NYUDv2Dataset
 
 
@@ -24,6 +24,7 @@ class FCNManager(object):
 
         self.criterion_mse = Conv_MSELoss(self.net.module.final_score, self.granularity).cuda()
         self.criterion_ce = Discrete_CELoss(self.granularity).cuda()
+        self.criterion = CombinedLoss(self.net.module.final_score, self.writer, self.granularity)
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True)
 
@@ -36,6 +37,8 @@ class FCNManager(object):
             criterion = self.criterion_ce
         elif loss_type == 'MSE':
             criterion = self.criterion_mse
+        elif loss_type == 'Comb':
+            criterion = self.criterion
         else:
             raise ValueError('Unknown Loss!')
 
@@ -71,9 +74,11 @@ class FCNManager(object):
             print('Testing.')
 
         if loss_type == 'CE':
-            criterion = self.criterion_ce
+            criterion = self.criterion_ce.eval()
         elif loss_type == 'MSE':
-            criterion = self.criterion_mse
+            criterion = self.criterion_mse.eval()
+        elif loss_type == 'Comb':
+            criterion = self.criterion.eval()
         else:
             raise ValueError('Unknown Loss!')
 
@@ -160,8 +165,8 @@ def main():
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
     # fcn.train(epoch=args.epoch, loss_type='CE')
     # fcn.test()
-    fcn.train(epoch=args.epoch, loss_type='CE', lr=args.lr)
-    fcn.train(epoch=args.epoch, loss_type='MSE', lr=args.lr)
+    fcn.train(epoch=args.epoch, loss_type='Comb', lr=args.lr)
+    # fcn.train(epoch=args.epoch, loss_type='MSE', lr=args.lr)
     # fcn.test()
     fcn.save()
 
