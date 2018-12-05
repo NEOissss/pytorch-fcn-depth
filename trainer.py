@@ -15,7 +15,7 @@ class FCNManager(object):
         self.flip = flip
         self.batch = batch
         self.val = val
-        self.granularity = 64
+        self.granularity = 100
         self.writer = SummaryWriter()
 
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
@@ -145,7 +145,7 @@ def main():
 
     data_opts = {'dataset': 'NYUDv2',
                  'path': args.path,
-                 'train_cut': [0, 800],
+                 'train_cut': [0, 20],
                  'test_cut': [900, None],
                  'val_cut': [800, 900]}
 
@@ -161,7 +161,8 @@ def main():
     # fcn.train(epoch=args.epoch, loss_type='CE')
     # fcn.test()
     fcn.train(epoch=args.epoch, loss_type='MSE', lr=args.lr)
-    fcn.test()
+    fcn.train(epoch=args.epoch, loss_type='CE', lr=args.lr)
+    # fcn.test()
     fcn.save()
 
 

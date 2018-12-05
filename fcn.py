@@ -87,9 +87,9 @@ class FCN8s(nn.Module):
         self.final_score = nn.Sequential(
             nn.Conv2d(output_size, 64, 7, padding=3),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, 3, padding=1),
+            nn.Conv2d(64, 32, 3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 1, 3, padding=1),
+            nn.Conv2d(32, 1, 3, padding=1),
         )
 
         self.init_params(pretrain=pretrain)
