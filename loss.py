@@ -10,10 +10,23 @@ class Conv_MSELoss(nn.Module):
         self.criterion = torch.nn.MSELoss()
 
     def forward(self, x, gt):
-        int_x = x.max(dim=1)[1].type(torch.cuda.FloatTensor)
         gt = gt * self.granularity
-        est_x = self.conv(int_x)
+        est_x = self.conv(x)
         return self.criterion(est_x, gt)
+
+
+# class Conv_MSELoss(nn.Module):
+#     def __init__(self, conv, granularity):
+#         super(Conv_MSELoss, self).__init__()
+#         self.conv = conv
+#         self.granularity = granularity / 10
+#         self.criterion = torch.nn.MSELoss()
+#
+#     def forward(self, x, gt):
+#         int_x = x.max(dim=1)[1].unsqueeze(0).type(torch.cuda.FloatTensor)
+#         gt = gt * self.granularity
+#         est_x = self.conv(int_x)
+#         return self.criterion(est_x, gt)
 
 
 class Discrete_CELoss(nn.Module):
@@ -41,8 +54,8 @@ class CombinedLoss(nn.Module):
         gt = gt * self.granularity
         int_gt = gt.type(torch.cuda.LongTensor)[0]
         loss1 = self.criterion1(x, int_gt)
-        int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
-        est_x = self.conv(int_x)
+        # int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
+        est_x = self.conv(x)
         loss2 = self.criterion2(est_x, gt)
         self.writer.add_scalar('train_loss/CrossEntropy', loss1.item())
         self.writer.add_scalar('train_loss/MSE', loss2.item())
