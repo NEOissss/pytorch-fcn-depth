@@ -24,7 +24,7 @@ class FCNManager(object):
 
         self.criterion_mse = Conv_MSELoss(self.net.module.final_score, self.granularity).cuda()
         self.criterion_ce = Discrete_CELoss(self.granularity).cuda()
-        self.criterion = CombinedLoss(self.net.module.final_score, self.writer, self.granularity)
+        self.criterion = CombinedLoss(self.net.module.final_score, self.writer, self.granularity).cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True)
 
