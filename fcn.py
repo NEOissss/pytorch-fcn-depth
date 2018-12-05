@@ -161,7 +161,7 @@ class FCN8s(nn.Module):
             torch.nn.init.kaiming_normal_(layer.weight.data)
             torch.nn.init.constant_(layer.bias.data, val=0)
 
-        for i in [0, 2, 4]:
+        for i in [0, 2]:
             torch.nn.init.kaiming_normal_(self.final_score[i].weight.data)
             torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
