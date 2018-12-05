@@ -57,6 +57,6 @@ class CombinedLoss(nn.Module):
         # int_x = torch.unsqueeze(x.max(dim=1)[1], 1).type(torch.cuda.FloatTensor)
         est_x = self.conv(x)
         loss2 = self.criterion2(est_x, gt)
-        self.writer.add_scalar('train_loss/CrossEntropy', loss1.item())
+        self.writer.add_scalar('train_loss/CE', loss1.item())
         self.writer.add_scalar('train_loss/MSE', loss2.item())
         return loss1 + 0.1 * loss2
