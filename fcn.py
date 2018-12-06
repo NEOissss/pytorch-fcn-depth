@@ -21,7 +21,6 @@ class FCN8s(nn.Module):
         super(FCN8s, self).__init__()
         self.image_size = image_size
         self.output_size = output_size
-        self.fc_output_size = image_size[0] * image_size[1]
 
         self.conv_block1 = nn.Sequential(
             nn.Conv2d(3, 64, 3, padding=100),
@@ -94,12 +93,6 @@ class FCN8s(nn.Module):
             nn.Conv2d(64, 1, 3, padding=1),
         )
 
-        self.fc_regressor = nn.Sequential(
-            nn.Linear(self.fc_output_size, self.fc_output_size),
-            nn.ReLU(inplace=True),
-            nn.Linear(self.fc_output_size, self.fc_output_size)
-        )
-
         self.init_params(pretrain=pretrain)
 
     def forward(self, x):
@@ -124,9 +117,6 @@ class FCN8s(nn.Module):
         out = out[:, :, 31:31 + x.size()[2], 31:31 + x.size()[3]].contiguous()
 
         out = self.final_score(out)
-
-        out = self.fc_regressor(out.view(-1, self.fc_output_size))
-        out = out.view(-1, 1, self.image_size[0], self.image_size[1])
 
         return out
 
