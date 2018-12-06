@@ -14,7 +14,7 @@ class FCNManager(object):
         self.flip = flip
         self.batch = batch
         self.val = val
-        self.granularity = 1
+        self.granularity = 10
         self.writer = SummaryWriter()
 
         self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
@@ -54,7 +54,7 @@ class FCNManager(object):
                 self.writer.add_scalar('val_loss/MSE', val_loss.item(), t)
                 self.scheduler.step(val_loss)
 
-    def test(self, val=False, loss_type='CE'):
+    def test(self, val=False):
         if val:
             data_loader = self.val_data_loader
         else:
