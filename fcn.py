@@ -17,9 +17,11 @@ def get_upsample_filter(size):
 
 
 class FCN8s(nn.Module):
-    def __init__(self, pretrain=True, output_size=100):
+    def __init__(self, pretrain=True, image_size=(480, 640), output_size=100):
         super(FCN8s, self).__init__()
+        self.image_size = image_size
         self.output_size = output_size
+        self.fc_output_size = image_size[0] * image_size[1]
 
         self.conv_block1 = nn.Sequential(
             nn.Conv2d(3, 64, 3, padding=100),
@@ -85,11 +87,17 @@ class FCN8s(nn.Module):
         self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 16, stride=8)
 
         self.final_score = nn.Sequential(
-            nn.Conv2d(output_size, 64, 7, padding=3),
+            nn.Conv2d(output_size, 64, 3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(64, 64, 3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(64, 1, 3, padding=1),
+        )
+
+        self.fc_regressor = nn.Sequential(
+            nn.Linear(self.fc_output_size, self.fc_output_size),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.fc_output_size, self.fc_output_size)
         )
 
         self.init_params(pretrain=pretrain)
@@ -114,6 +122,11 @@ class FCN8s(nn.Module):
 
         out = self.upscore3(score3)
         out = out[:, :, 31:31 + x.size()[2], 31:31 + x.size()[3]].contiguous()
+
+        out = self.final_score(out)
+
+        out = self.fc_regressor(out.view(-1, self.fc_output_size))
+        out = out.view(-1, 1, self.image_size[0], self.image_size[1])
 
         return out
 
