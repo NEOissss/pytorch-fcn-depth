@@ -129,9 +129,9 @@ def main():
 
     data_opts = {'dataset': 'NYUDv2',
                  'path': args.path,
-                 'train_cut': [0, 20],
-                 'test_cut': [900, None],
-                 'val_cut': [800, 900]}
+                 'train_cut': [0, 1000],
+                 'test_cut': [1050, None],
+                 'val_cut': [1000, 1050]}
 
     print('====FCN8s for Depth Exp====')
     print('Validation: ' + str(args.valid))
