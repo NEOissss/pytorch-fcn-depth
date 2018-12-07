@@ -70,6 +70,17 @@ class FCN(nn.Module):
 
         self.score_pool5 = nn.Conv2d(512, output_size, 1)
         self.score_pool4 = nn.Conv2d(512, output_size, 1)
+        # self.score_pool5 = nn.Sequential(
+        #     nn.Linear(22*27, 22*27),
+        #     nn.ReLU(inplace=True),
+        #     nn.Linear(22*27, 22*27)
+        # )
+        # self.score_pool4 = nn.Sequential(
+        #     nn.Linear(43*53, 43*53),
+        #     nn.ReLU(inplace=True),
+        #     nn.Linear(43*53, 43*53)
+        # )
+
         self.score_pool3 = nn.Conv2d(256, output_size, 1)
         self.score_pool2 = nn.Conv2d(128, output_size, 1)
         self.score_pool1 = nn.Conv2d(64, output_size, 1)

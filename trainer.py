@@ -14,7 +14,7 @@ class FCNManager(object):
         self.flip = flip
         self.batch = batch
         self.val = val
-        self.granularity = 4
+        self.granularity = 1
         self.writer = SummaryWriter()
 
         self.net = torch.nn.DataParallel(FCN(pretrain=pretrain, output_size=self.granularity)).cuda()
