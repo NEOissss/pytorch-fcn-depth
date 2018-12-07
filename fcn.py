@@ -68,19 +68,8 @@ class FCN(nn.Module):
             nn.MaxPool2d(2, stride=2, ceil_mode=True),
         )
 
-        # self.score_pool5 = nn.Conv2d(512, output_size, 1)
-        # self.score_pool4 = nn.Conv2d(512, output_size, 1)
-        self.score_pool5 = nn.Sequential(
-            nn.Linear(22*27, 22*27),
-            nn.ReLU(inplace=True),
-            nn.Linear(22*27, 22*27)
-        )
-        self.score_pool4 = nn.Sequential(
-            nn.Linear(43*53, 43*53),
-            nn.ReLU(inplace=True),
-            nn.Linear(43*53, 43*53)
-        )
-
+        self.score_pool5 = nn.Conv2d(512, output_size, 1)
+        self.score_pool4 = nn.Conv2d(512, output_size, 1)
         self.score_pool3 = nn.Conv2d(256, output_size, 1)
         self.score_pool2 = nn.Conv2d(128, output_size, 1)
         self.score_pool1 = nn.Conv2d(64, output_size, 1)
@@ -90,6 +79,17 @@ class FCN(nn.Module):
         self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore2 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore1 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
+
+        self.fc_score_pool5 = nn.Sequential(
+            nn.Linear(22 * 27, 22 * 27),
+            nn.ReLU(inplace=True),
+            nn.Linear(22 * 27, 22 * 27)
+        )
+        self.fc_score_pool4 = nn.Sequential(
+            nn.Linear(43 * 53, 43 * 53),
+            nn.ReLU(inplace=True),
+            nn.Linear(43 * 53, 43 * 53)
+        )
 
         self.final_score = nn.Sequential(
             nn.Conv2d(output_size, 64, 7, padding=3),
@@ -110,13 +110,15 @@ class FCN(nn.Module):
         conv4 = self.conv_block4(conv3)
         conv5 = self.conv_block5(conv4)
 
-        conv5 = conv5.view(1, -1)
         score5 = self.score_pool5(conv5)
+        score5 = score5.view(1, -1)
+        score5 = self.fc_score_pool5(score5)
         score5 = score5.view(1, 1, 22, 27)
         upscore5 = self.upscore5(score5)
 
-        conv4 = conv4.view(1, -1)
         score4 = self.score_pool4(conv4)
+        score4 = score4.view(1, -1)
+        score4 = self.fc_score_pool4(score4)
         score4 = score4.view(1, 1, 43, 53)
         score4 += upscore5[:, :, 1:1+score4.size(2), 1:1+score4.size(3)]
         upscore4 = self.upscore4(score4)
@@ -172,9 +174,9 @@ class FCN(nn.Module):
                     torch.nn.init.constant_(layer[i].bias.data, val=0)
 
         # initialize score pool layers
-        scores = [
-            self.score_pool5,
-            self.score_pool4
+        fc_scores = [
+            self.fc_score_pool5,
+            self.fc_score_pool4
         ]
         for layer in scores:
             for i in [0, 2]:
@@ -182,8 +184,8 @@ class FCN(nn.Module):
                 torch.nn.init.constant_(layer[i].bias.data, val=0)
 
         scores = [
-            # self.score_pool5,
-            # self.score_pool4,
+            self.score_pool5,
+            self.score_pool4,
             self.score_pool3,
             self.score_pool2,
             self.score_pool1
