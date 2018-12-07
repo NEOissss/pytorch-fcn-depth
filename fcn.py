@@ -81,13 +81,13 @@ class FCN(nn.Module):
         self.upscore1 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
 
         self.final_score = nn.Sequential(
-            nn.Conv2d(output_size, 1024, 7, padding=3),
+            nn.Conv2d(output_size, 64, 7, padding=3),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1024, 3, padding=1),
+            nn.Conv2d(64, 64, 3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1024, 1),
+            nn.Conv2d(64, 64, 1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(1024, 1, 1),
+            nn.Conv2d(64, 1, 1),
         )
 
         self.init_params(pretrain=pretrain)
@@ -105,10 +105,8 @@ class FCN(nn.Module):
         score4 = self.score_pool4(conv4)
         score4 += upscore5[:, :, 1:1+score4.size(2), 1:1+score4.size(3)]
         upscore4 = self.upscore4(score4)
-        print(conv4.shape, score4.shape, upscore4.shape)
 
         score3 = self.score_pool3(conv3)
-        print(score3.shape)
         score3 += upscore4[:, :, 1:1+score3.size(2), 1:1+score3.size(3)]
         upscore3 = self.upscore3(score3)
 
