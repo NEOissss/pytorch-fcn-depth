@@ -143,15 +143,15 @@ class FCN(nn.Module):
                         assert l1.bias.size() == l2.bias.size()
                         l2.weight.data = l1.weight.data
                         l2.bias.data = l1.bias.data
-            for i1, i2 in zip([0, 3], [0, 3]):
-                l1 = vgg16(pretrained=True).classifier[i1]
-                l2 = self.score_pool5[i2]
-                l2.weight.data = l1.weight.data.view(l2.weight.size())
-                l2.bias.data = l1.bias.data.view(l2.bias.size())
-            l1 = vgg16(pretrained=True).classifier[6]
-            l2 = self.score_pool5[6]
-            l2.weight.data = l1.weight.data[:self.output_size, :].view(l2.weight.size())
-            l2.bias.data = l1.bias.data[:self.output_size]
+            # for i1, i2 in zip([0, 3], [0, 3]):
+            #     l1 = vgg16(pretrained=True).classifier[i1]
+            #     l2 = self.score_pool5[i2]
+            #     l2.weight.data = l1.weight.data.view(l2.weight.size())
+            #     l2.bias.data = l1.bias.data.view(l2.bias.size())
+            # l1 = vgg16(pretrained=True).classifier[6]
+            # l2 = self.score_pool5[6]
+            # l2.weight.data = l1.weight.data[:self.output_size, :].view(l2.weight.size())
+            # l2.bias.data = l1.bias.data[:self.output_size]
         else:
             for layer in blocks:
                 for i in [0, 3, 6]:
