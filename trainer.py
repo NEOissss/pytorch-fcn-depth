@@ -143,7 +143,7 @@ def main():
 
     fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
     fcn.train(epoch=args.epoch, lr=args.lr)
-    # fcn.test()
+    fcn.test()
     fcn.save()
 
 
