@@ -99,13 +99,11 @@ class FCN(nn.Module):
 
         score5 = self.score_pool5(conv5)
         upscore5 = self.upscore5(score5)
-        print(conv5.shape, score5.shape, upscore5.shape)
 
         score4 = self.score_pool4(conv4)
-        score4 = score4[:, :, 1:1 + upscore5.size()[2], 1:1 + upscore5.size()[3]].contiguous()
+        score4 = score4[:, :, 0:0 + upscore5.size()[2], 0:0 + upscore5.size()[3]].contiguous()
         score4 += upscore5
         upscore4 = self.upscore4(score4)
-        print(conv4.shape, score4.shape, upscore4.shape)
 
         score3 = self.score_pool3(conv3)
         score3 = score3[:, :, 5:5 + upscore4.size()[2], 5:5 + upscore4.size()[3]].contiguous()
