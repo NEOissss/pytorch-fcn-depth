@@ -68,11 +68,11 @@ class FCN(nn.Module):
             nn.MaxPool2d(2, stride=2, ceil_mode=True),
         )
 
-        self.score_pool5 = nn.Conv2d(512, output_size, 5)
-        self.score_pool4 = nn.Conv2d(512, output_size, 5)
-        self.score_pool3 = nn.Conv2d(256, output_size, 5)
-        self.score_pool2 = nn.Conv2d(128, output_size, 5)
-        self.score_pool1 = nn.Conv2d(64, output_size, 5)
+        self.score_pool5 = nn.Conv2d(512, output_size, 1)
+        self.score_pool4 = nn.Conv2d(512, output_size, 1)
+        self.score_pool3 = nn.Conv2d(256, output_size, 1)
+        self.score_pool2 = nn.Conv2d(128, output_size, 1)
+        self.score_pool1 = nn.Conv2d(64, output_size, 1)
 
         self.upscore5 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore4 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
@@ -82,6 +82,8 @@ class FCN(nn.Module):
 
         self.final_score = nn.Sequential(
             nn.Conv2d(output_size, 1024, 7, padding=3),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(1024, 1024, 3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(1024, 1024, 1),
             nn.ReLU(inplace=True),
@@ -99,31 +101,26 @@ class FCN(nn.Module):
 
         score5 = self.score_pool5(conv5)
         upscore5 = self.upscore5(score5)
-        print(conv5.shape, score5.shape, upscore5.shape)
 
         score4 = self.score_pool4(conv4)
-        score4 = score4[:, :, 0:0 + upscore5.size()[2], 0:0 + upscore5.size()[3]].contiguous()
-        score4 += upscore5
+        score4 += upscore5[:, :, 1:1+score4.size(2), 1:1+score4.size(3)]
         upscore4 = self.upscore4(score4)
         print(conv4.shape, score4.shape, upscore4.shape)
 
         score3 = self.score_pool3(conv3)
         print(score3.shape)
-        score3 = score3[:, :, 5:5 + upscore4.size()[2], 5:5 + upscore4.size()[3]].contiguous()
-        score3 += upscore4
+        score3 += upscore4[:, :, 1:1+score3.size(2), 1:1+score3.size(3)]
         upscore3 = self.upscore3(score3)
 
         score2 = self.score_pool2(conv2)
-        score2 = score2[:, :, 16:16 + upscore3.size()[2], 16:16 + upscore4.size()[3]].contiguous()
-        score2 += upscore3
+        score2 += upscore3[:, :, 1:1+score2.size(2), 1:1+score2.size(3)]
         upscore2 = self.upscore2(score2)
 
         score1 = self.score_pool1(conv1)
-        score1 = score1[:, :, 32:32 + upscore2.size()[2], 32:32 + upscore4.size()[3]].contiguous()
-        score1 += upscore2
+        score1 += upscore2[:, :, 1:1+score1.size(2), 1:1+score1.size(3)]
         upscore1 = self.upscore1(score1)
 
-        out = upscore1[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
+        out = upscore1[:, :, 100:100+x.size()[2], 100:100+x.size()[3]].contiguous()
         out = self.final_score(out)
 
         return out
@@ -173,7 +170,7 @@ class FCN(nn.Module):
             torch.nn.init.kaiming_normal_(layer.weight.data)
             torch.nn.init.constant_(layer.bias.data, val=0)
 
-        for i in [0, 2, 4]:
+        for i in [0, 2, 4, 6]:
             torch.nn.init.kaiming_normal_(self.final_score[i].weight.data)
             torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
