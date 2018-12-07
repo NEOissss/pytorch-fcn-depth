@@ -178,7 +178,7 @@ class FCN(nn.Module):
             self.fc_score_pool5,
             self.fc_score_pool4
         ]
-        for layer in scores:
+        for layer in fc_scores:
             for i in [0, 2]:
                 torch.nn.init.kaiming_normal_(layer[i].weight.data)
                 torch.nn.init.constant_(layer[i].bias.data, val=0)
