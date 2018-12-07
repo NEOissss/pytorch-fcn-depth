@@ -16,9 +16,9 @@ def get_upsample_filter(size):
     return torch.from_numpy(filter).float()
 
 
-class FCN8s(nn.Module):
+class FCN(nn.Module):
     def __init__(self, pretrain=True, image_size=(480, 640), output_size=100):
-        super(FCN8s, self).__init__()
+        super(FCN, self).__init__()
         self.image_size = image_size
         self.output_size = output_size
 
@@ -68,29 +68,24 @@ class FCN8s(nn.Module):
             nn.MaxPool2d(2, stride=2, ceil_mode=True),
         )
 
-        self.score_pool5 = nn.Sequential(
-            nn.Conv2d(512, 4096, 7),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(),
-            nn.Conv2d(4096, 4096, 1),
-            nn.ReLU(inplace=True),
-            nn.Dropout2d(),
-            nn.Conv2d(4096, output_size, 1),
-        )
-
-        self.score_pool4 = nn.Conv2d(512, output_size, 1)
-        self.score_pool3 = nn.Conv2d(256, output_size, 1)
+        self.score_pool5 = nn.Conv2d(512, output_size, 5)
+        self.score_pool4 = nn.Conv2d(512, output_size, 5)
+        self.score_pool3 = nn.Conv2d(256, output_size, 5)
+        self.score_pool2 = nn.Conv2d(128, output_size, 5)
+        self.score_pool1 = nn.Conv2d(64, output_size, 5)
 
         self.upscore5 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore4 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
-        self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 16, stride=8)
+        self.upscore3 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
+        self.upscore2 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
+        self.upscore1 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
 
         self.final_score = nn.Sequential(
-            nn.Conv2d(output_size, 64, 7, padding=3),
+            nn.Conv2d(output_size, 1024, 7, padding=3),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, 7, padding=3),
+            nn.Conv2d(1024, 1024, 1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 1, 7, padding=3),
+            nn.Conv2d(1024, 1, 1),
         )
 
         self.init_params(pretrain=pretrain)
@@ -101,21 +96,31 @@ class FCN8s(nn.Module):
         conv3 = self.conv_block3(conv2)
         conv4 = self.conv_block4(conv3)
         conv5 = self.conv_block5(conv4)
+
         score5 = self.score_pool5(conv5)
-
         upscore5 = self.upscore5(score5)
+
         score4 = self.score_pool4(conv4)
-        score4 = score4[:, :, 5:5 + upscore5.size()[2], 5:5 + upscore5.size()[3]].contiguous()
+        score4 = score4[:, :, 1:1 + upscore5.size()[2], 1:1 + upscore5.size()[3]].contiguous()
         score4 += upscore5
-
         upscore4 = self.upscore4(score4)
+
         score3 = self.score_pool3(conv3)
-        score3 = score3[:, :, 9:9 + upscore4.size()[2], 9:9 + upscore4.size()[3]].contiguous()
+        score3 = score3[:, :, 5:5 + upscore4.size()[2], 5:5 + upscore4.size()[3]].contiguous()
         score3 += upscore4
+        upscore3 = self.upscore3(score3)
 
-        out = self.upscore3(score3)
-        out = out[:, :, 31:31 + x.size()[2], 31:31 + x.size()[3]].contiguous()
+        score2 = self.score_pool2(conv2)
+        score2 = score2[:, :, 16:16 + upscore3.size()[2], 16:16 + upscore4.size()[3]].contiguous()
+        score2 += upscore3
+        upscore2 = self.upscore2(score2)
 
+        score1 = self.score_pool1(conv1)
+        score1 = score1[:, :, 32:32 + upscore2.size()[2], 32:32 + upscore4.size()[3]].contiguous()
+        score1 += upscore2
+        upscore1 = self.upscore1(score1)
+
+        out = upscore1[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous()
         out = self.final_score(out)
 
         return out
@@ -152,13 +157,14 @@ class FCN8s(nn.Module):
                 for i in [0, 3, 6]:
                     torch.nn.init.kaiming_normal_(layer[i].weight.data)
                     torch.nn.init.constant_(layer[i].bias.data, val=0)
-            for i in [0, 3, 6]:
-                torch.nn.init.kaiming_normal_(self.score_pool5[i].weight.data)
-                torch.nn.init.constant_(self.score_pool5[i].bias.data, val=0)
 
+        # initialize score pool layers
         scores = [
+            self.score_pool5,
             self.score_pool4,
-            self.score_pool3
+            self.score_pool3,
+            self.score_pool2,
+            self.score_pool1
             ]
         for layer in scores:
             torch.nn.init.kaiming_normal_(layer.weight.data)
@@ -168,21 +174,17 @@ class FCN8s(nn.Module):
             torch.nn.init.kaiming_normal_(self.final_score[i].weight.data)
             torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
-        # initialize upscore layer
-        c1, c2, h, w = self.upscore5.weight.data.size()
-        assert c1 == c2 == self.output_size
-        assert h == w
-        weight = get_upsample_filter(h)
-        self.upscore5.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
-
-        c1, c2, h, w = self.upscore4.weight.data.size()
-        assert c1 == c2 == self.output_size
-        assert h == w
-        weight = get_upsample_filter(h)
-        self.upscore4.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
-
-        c1, c2, h, w = self.upscore3.weight.data.size()
-        assert c1 == c2 == self.output_size
-        assert h == w
-        weight = get_upsample_filter(h)
-        self.upscore3.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)
+        # initialize upscore layers
+        upscore_layer = [
+            self.upscore5,
+            self.upscore4,
+            self.upscore3,
+            self.upscore2,
+            self.upscore1
+        ]
+        for layer in upscore_layer:
+            c1, c2, h, w = layer.weight.data.size()
+            assert c1 == c2 == self.output_size
+            assert h == w
+            weight = get_upsample_filter(h)
+            layer.weight.data = weight.view(1, 1, h, w).repeat(c1, c2, 1, 1)

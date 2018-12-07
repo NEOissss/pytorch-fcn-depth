@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
-from fcn import FCN8s
+from fcn import FCN
 from dataset import NYUDv2Dataset
 
 
@@ -17,7 +17,7 @@ class FCNManager(object):
         self.granularity = 10
         self.writer = SummaryWriter()
 
-        self.net = torch.nn.DataParallel(FCN8s(pretrain=pretrain, output_size=self.granularity)).cuda()
+        self.net = torch.nn.DataParallel(FCN(pretrain=pretrain, output_size=self.granularity)).cuda()
         if param_path:
             self.load_param(param_path)
 
