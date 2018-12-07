@@ -110,16 +110,16 @@ class FCN(nn.Module):
         conv4 = self.conv_block4(conv3)
         conv5 = self.conv_block5(conv4)
 
+        conv5 = conv5.view(1, -1)
         score5 = self.score_pool5(conv5)
-        score5 = score5.view(1, -1)
+        score5 = score5.view(1, 1, 22, 27)
         upscore5 = self.upscore5(score5)
-        upscore5 = upscore5.view(1, 1, 22, 27)
 
+        conv4 = conv4.view(1, -1)
         score4 = self.score_pool4(conv4)
+        score4 = score4.view(1, 1, 43, 53)
         score4 += upscore5[:, :, 1:1+score4.size(2), 1:1+score4.size(3)]
-        score4= score4.view(1, -1)
         upscore4 = self.upscore4(score4)
-        upscore4 = upscore4.view(1, 1, 43, 53)
 
         score3 = self.score_pool3(conv3)
         score3 += upscore4[:, :, 1:1+score3.size(2), 1:1+score3.size(3)]
