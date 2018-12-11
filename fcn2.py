@@ -1,24 +1,12 @@
-import numpy as np
 import torch
 import torch.nn as nn
 from torchvision.models import vgg16
+from utils import get_upsample_filter
 
 
-def get_upsample_filter(size):
-    """Make a 2D bilinear kernel suitable for upsampling"""
-    factor = (size + 1) // 2
-    if size % 2 == 1:
-        center = factor - 1
-    else:
-        center = factor - 0.5
-    og = np.ogrid[:size, :size]
-    filter = (1 - abs(og[0] - center) / factor) * (1 - abs(og[1] - center) / factor)
-    return torch.from_numpy(filter).float()
-
-
-class FCN(nn.Module):
+class FCN2_spatial(nn.Module):
     def __init__(self, pretrain=True, image_size=(480, 640), output_size=100):
-        super(FCN, self).__init__()
+        super(FCN2_spatial, self).__init__()
         self.image_size = image_size
         self.output_size = output_size
 
@@ -68,7 +56,16 @@ class FCN(nn.Module):
             nn.MaxPool2d(2, stride=2, ceil_mode=True),
         )
 
-        self.score_pool5 = nn.Conv2d(512, output_size, 1)
+        self.score_pool5 = nn.Sequential(
+            nn.Conv2d(512, 4096, 7, padding=3),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(),
+            nn.Conv2d(4096, 4096, 1),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(),
+            nn.Conv2d(4096, output_size, 1),
+        )
+
         self.score_pool4 = nn.Conv2d(512, output_size, 1)
         self.score_pool3 = nn.Conv2d(256, output_size, 1)
         self.score_pool2 = nn.Conv2d(128, output_size, 1)
@@ -80,27 +77,6 @@ class FCN(nn.Module):
         self.upscore2 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
         self.upscore1 = nn.ConvTranspose2d(output_size, output_size, 4, stride=2)
 
-        self.fc_score_pool5 = nn.Sequential(
-            nn.Linear(22 * 27, 22 * 27),
-            nn.ReLU(inplace=True),
-            nn.Linear(22 * 27, 22 * 27)
-        )
-        self.fc_score_pool4 = nn.Sequential(
-            nn.Linear(43 * 53, 43 * 53),
-            nn.ReLU(inplace=True),
-            nn.Linear(43 * 53, 43 * 53)
-        )
-
-        self.final_score = nn.Sequential(
-            nn.Conv2d(output_size, 64, 7, padding=3),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, 3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, 1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, 1, 1),
-        )
-
         self.init_params(pretrain=pretrain)
 
     def forward(self, x):
@@ -111,15 +87,9 @@ class FCN(nn.Module):
         conv5 = self.conv_block5(conv4)
 
         score5 = self.score_pool5(conv5)
-        score5 = score5.view(1, -1)
-        score5 = self.fc_score_pool5(score5)
-        score5 = score5.view(1, 1, 22, 27)
         upscore5 = self.upscore5(score5)
 
         score4 = self.score_pool4(conv4)
-        score4 = score4.view(1, -1)
-        score4 = self.fc_score_pool4(score4)
-        score4 = score4.view(1, 1, 43, 53)
         score4 += upscore5[:, :, 1:1+score4.size(2), 1:1+score4.size(3)]
         upscore4 = self.upscore4(score4)
 
@@ -136,8 +106,6 @@ class FCN(nn.Module):
         upscore1 = self.upscore1(score1)
 
         out = upscore1[:, :, 100:100+x.size()[2], 100:100+x.size()[3]].contiguous()
-        out = self.final_score(out)
-
         return out
 
     def init_params(self, pretrain=True):
@@ -154,37 +122,24 @@ class FCN(nn.Module):
             for idx, conv_block in enumerate(blocks):
                 for l1, l2 in zip(features[ranges[idx][0]: ranges[idx][1]], conv_block):
                     if isinstance(l1, nn.Conv2d) and isinstance(l2, nn.Conv2d):
-                        assert l1.weight.size() == l2.weight.size()
-                        assert l1.bias.size() == l2.bias.size()
                         l2.weight.data = l1.weight.data
                         l2.bias.data = l1.bias.data
-            # for i1, i2 in zip([0, 3], [0, 3]):
-            #     l1 = vgg16(pretrained=True).classifier[i1]
-            #     l2 = self.score_pool5[i2]
-            #     l2.weight.data = l1.weight.data.view(l2.weight.size())
-            #     l2.bias.data = l1.bias.data.view(l2.bias.size())
-            # l1 = vgg16(pretrained=True).classifier[6]
-            # l2 = self.score_pool5[6]
-            # l2.weight.data = l1.weight.data[:self.output_size, :].view(l2.weight.size())
-            # l2.bias.data = l1.bias.data[:self.output_size]
+            for i1, i2 in zip([0, 3], [0, 3]):
+                l1 = vgg16(pretrained=True).classifier[i1]
+                l2 = self.score_pool5[i2]
+                l2.weight.data = l1.weight.data.view(l2.weight.size())
+                l2.bias.data = l1.bias.data.view(l2.bias.size())
         else:
             for layer in blocks:
                 for i in [0, 3, 6]:
                     torch.nn.init.kaiming_normal_(layer[i].weight.data)
                     torch.nn.init.constant_(layer[i].bias.data, val=0)
-
-        # initialize score pool layers
-        fc_scores = [
-            self.fc_score_pool5,
-            self.fc_score_pool4
-        ]
-        for layer in fc_scores:
-            for i in [0, 2]:
-                torch.nn.init.kaiming_normal_(layer[i].weight.data)
-                torch.nn.init.constant_(layer[i].bias.data, val=0)
+            for i in [0, 3]:
+                torch.nn.init.kaiming_normal_(self.score_pool5[i].weight.data)
+                torch.nn.init.constant_(self.score_pool5[i].bias.data, val=0)
 
         scores = [
-            self.score_pool5,
+            self.score_pool5[-1],
             self.score_pool4,
             self.score_pool3,
             self.score_pool2,
@@ -193,10 +148,6 @@ class FCN(nn.Module):
         for layer in scores:
             torch.nn.init.kaiming_normal_(layer.weight.data)
             torch.nn.init.constant_(layer.bias.data, val=0)
-
-        for i in [0, 2, 4, 6]:
-            torch.nn.init.kaiming_normal_(self.final_score[i].weight.data)
-            torch.nn.init.constant_(self.final_score[i].bias.data, val=0)
 
         # initialize upscore layers
         upscore_layer = [

@@ -4,12 +4,13 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
-from fcn import FCN
-from dataset import NYUDv2Dataset
+from fcn8 import FCN8
+from fcn2 import FCN2
+from fcn2_spatial import FCN2_spatial
 
 
 class FCNManager(object):
-    def __init__(self, data_opts, pretrain=True, param_path=None, lr=1e-3, decay=1e-2, batch=8, flip=False, val=True):
+    def __init__(self, net, data_opts, pretrain=True, param_path=None, lr=1e-3, decay=1e-2, batch=8, flip=False, val=True):
         self.batch = batch
         self.flip = flip
         self.batch = batch
@@ -17,7 +18,16 @@ class FCNManager(object):
         self.granularity = 1
         self.writer = SummaryWriter()
 
-        self.net = torch.nn.DataParallel(FCN(pretrain=pretrain, output_size=self.granularity)).cuda()
+        self._net = net
+        if net == 'FCN8':
+            self.net = torch.nn.DataParallel(FCN8(pretrain=pretrain, output_size=self.granularity)).cuda()
+        elif net == 'FCN2':
+            self.net = torch.nn.DataParallel(FCN2(pretrain=pretrain, output_size=self.granularity)).cuda()
+        elif net == 'FCN2s':
+            self.net = torch.nn.DataParallel(FCN2_spatial(pretrain=pretrain, output_size=self.granularity)).cuda()
+        else:
+            raise ValueError('Unknown model!')
+
         if param_path:
             self.load_param(param_path)
 
@@ -87,7 +97,7 @@ class FCNManager(object):
 
     def save(self):
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        net_path = 'FCN8s-param-' + timestamp
+        net_path = self._net + '-param-' + timestamp
         torch.save(self.net.state_dict(), net_path)
         print('FCN model parameters saved: ' + net_path)
         json_path = 'all_scalars' + timestamp + '.json'
@@ -103,6 +113,7 @@ class FCNManager(object):
 def main():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--net', dest='net', type=str, default='FCN8', help='Network')
     parser.add_argument('--path', dest='path', type=str, default='nyu_depth_v2_labeled.mat', help='Dataset path')
     parser.add_argument('--param', dest='param', type=str, default=None, help='Initial net parameters.')
     parser.add_argument('--lr', dest='lr', type=float, default=0.001, help='Base learning rate for training.')
@@ -141,7 +152,7 @@ def main():
     print('Weight decay: {:.0e}'.format(args.decay))
     print('Learning rate scheduler used!\n')
 
-    fcn = FCNManager(data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
+    fcn = FCNManager(net=args.net, data_opts=data_opts, param_path=args.param, lr=args.lr, decay=args.decay, batch=args.batch, val=args.valid)
     fcn.train(epoch=args.epoch, lr=args.lr)
     fcn.test()
     fcn.save()
