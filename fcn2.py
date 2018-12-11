@@ -4,9 +4,9 @@ from torchvision.models import vgg16
 from utils import get_upsample_filter
 
 
-class FCN2_spatial(nn.Module):
+class FCN2(nn.Module):
     def __init__(self, pretrain=True, image_size=(480, 640), output_size=100):
-        super(FCN2_spatial, self).__init__()
+        super(FCN2, self).__init__()
         self.image_size = image_size
         self.output_size = output_size
 
