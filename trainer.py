@@ -7,6 +7,7 @@ from tensorboardX import SummaryWriter
 from fcn8 import FCN8
 from fcn2 import FCN2
 from fcn2_spatial import FCN2_spatial
+from dataset import NYUDv2Dataset
 
 
 class FCNManager(object):
