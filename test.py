@@ -7,8 +7,8 @@ def main():
 
     data_opts = {'dataset': 'NYUDv2',
                  'path': '../dataset/NYUDepthV2/',
-                 'train_cut': [0, 1000],
-                 'test_cut': [0, 1000],
+                 'train_cut': [0, 1],
+                 'test_cut': [0, 1],
                  'val_cut': [0, 1000]}
 
     for i in range(3):
@@ -17,13 +17,13 @@ def main():
 
     data_opts = {'dataset': 'NYUDv2',
                  'path': '../dataset/NYUDepthV2/',
-                 'train_cut': [0, 1000],
-                 'test_cut': [0, 1000],
-                 'val_cut': [1200, 1210]}
+                 'train_cut': [0, 1],
+                 'test_cut': [0, 1],
+                 'val_cut': [1000, 1050]}
 
     for i in range(3):
         fcn = FCNManager(net=net[i], data_opts=data_opts, param_path=param[i], batch=1)
-        print(net[i] + ' Loss: {:f}'.format(fcn.test(val=True, save_idx=[i for i in range(10)])))
+        print(net[i] + ' Loss: {:f}'.format(fcn.test(val=True, save_flag=True)))
 
 
 if __name__ == '__main__':
