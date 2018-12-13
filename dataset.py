@@ -43,11 +43,5 @@ class NYUDv2Dataset(Dataset):
         return images, depths
 
 
-class SUNRGBD(Dataset):
-    def __init__(self, dir_path, cut):
-        super(SUNRGBD, self).__init__()
-
-
-
 if __name__ == '__main__':
     data_opts = {'train': True, 'cut': [0, 500]}

@@ -65,7 +65,7 @@ class FCNManager(object):
                 self.writer.add_scalar('val_loss/MSE', val_loss.item(), t)
                 self.scheduler.step(val_loss)
 
-    def test(self, val=False):
+    def test(self, val=False, save_idx=None):
         if val:
             data_loader = self.val_data_loader
         else:
@@ -75,10 +75,16 @@ class FCNManager(object):
         self.net.eval()
         loss_list = []
 
+        iter_num = 0
         for data, depth in iter(data_loader):
             score = self.net(data)
             loss = self.criterion(score, depth)
             loss_list.append(loss.item())
+            iter_num += 1
+
+            if save_idx and iter_num == save_idx:
+                res = score.cpu().detach().numpy()
+                np.save(self._net + '_batch_res', res)
 
         if not val:
             self.writer.add_scalar('test_loss/MSE', np.mean(loss_list).item())
