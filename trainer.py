@@ -87,6 +87,7 @@ class FCNManager(object):
             iter_num += 1
 
         if save_flag:
+            np.save(self._net + '_loss', np.array(loss_list))
             np.save(self._net + '_res', res_metric)
 
         if not val:
