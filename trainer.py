@@ -82,9 +82,9 @@ class FCNManager(object):
             loss_list.append(loss.item())
             iter_num += 1
 
-            if save_idx and iter_num == save_idx:
+            if save_idx and iter_num in save_idx:
                 res = score.cpu().detach().numpy()
-                np.save(self._net + '_batch_res', res)
+                np.save(self._net + '_batch_res_' + str(iter_num), res)
 
         if not val:
             self.writer.add_scalar('test_loss/MSE', np.mean(loss_list).item())

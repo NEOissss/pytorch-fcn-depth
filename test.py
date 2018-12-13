@@ -12,18 +12,18 @@ def main():
                  'val_cut': [0, 1000]}
 
     for i in range(3):
-        fcn = FCNManager(net=net[i], data_opts=data_opts, param_path=param[i], batch=10)
+        fcn = FCNManager(net=net[i], data_opts=data_opts, param_path=param[i], batch=1)
         print(net[i] + ' Loss: {:f}'.format(fcn.test(val=True)))
 
     data_opts = {'dataset': 'NYUDv2',
                  'path': '../dataset/NYUDepthV2/',
                  'train_cut': [0, 1000],
                  'test_cut': [0, 1000],
-                 'val_cut': [1100, 1110]}
+                 'val_cut': [1200, 1210]}
 
     for i in range(3):
-        fcn = FCNManager(net=net[i], data_opts=data_opts, param_path=param[i], batch=10)
-        print(net[i] + ' Loss: {:f}'.format(fcn.test(val=True, save_idx=0)))
+        fcn = FCNManager(net=net[i], data_opts=data_opts, param_path=param[i], batch=1)
+        print(net[i] + ' Loss: {:f}'.format(fcn.test(val=True, save_idx=[i for i in range(10)])))
 
 
 if __name__ == '__main__':
