@@ -121,7 +121,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--net', dest='net', type=str, default='FCN8', help='Network')
-    parser.add_argument('--path', dest='path', type=str, default='nyu_depth_v2_labeled.mat', help='Dataset path')
+    parser.add_argument('--path', dest='path', type=str, default='./', help='Dataset path')
     parser.add_argument('--param', dest='param', type=str, default=None, help='Initial net parameters.')
     parser.add_argument('--lr', dest='lr', type=float, default=0.001, help='Base learning rate for training.')
     parser.add_argument('--decay', dest='decay', type=float, default=0.01, help='Weight decay.')

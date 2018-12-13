@@ -6,7 +6,7 @@ def main():
     param = ['FCN8-param-20181211130455', 'FCN2-param-20181211191402', 'FCN2s-param-20181212012621']
 
     data_opts = {'dataset': 'NYUDv2',
-                 'path': 'nyu_depth_v2_labeled.mat',
+                 'path': '../dataset/NYUDepthV2/',
                  'train_cut': [0, 1000],
                  'test_cut': [0, 1000],
                  'val_cut': [0, 1000]}
@@ -16,7 +16,7 @@ def main():
         print(net[i] + ' Loss: {:f}'.format(fcn.test(val=True)))
 
     data_opts = {'dataset': 'NYUDv2',
-                 'path': 'nyu_depth_v2_labeled.mat',
+                 'path': '../dataset/NYUDepthV2/',
                  'train_cut': [0, 1000],
                  'test_cut': [0, 1000],
                  'val_cut': [1100, 1110]}
