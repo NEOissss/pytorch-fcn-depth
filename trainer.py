@@ -8,6 +8,7 @@ from fcn8 import FCN8
 from fcn2 import FCN2
 from fcn2_spatial import FCN2_spatial
 from dataset import NYUDv2Dataset
+from loss import LogDepthLoss
 
 
 class FCNManager(object):
@@ -32,7 +33,8 @@ class FCNManager(object):
         if param_path:
             self.load_param(param_path)
 
-        self.criterion = torch.nn.MSELoss().cuda()
+        # self.criterion = torch.nn.MSELoss().cuda()
+        self.criterion = LogDepthLoss().cuda()
         self.solver = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=decay)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.solver, verbose=True)
 

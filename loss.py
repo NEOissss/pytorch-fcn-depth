@@ -2,33 +2,6 @@ import torch
 import torch.nn as nn
 
 
-class Conv_MSELoss(nn.Module):
-    def __init__(self, conv, granularity):
-        super(Conv_MSELoss, self).__init__()
-        self.conv = conv
-        self.granularity = granularity / 10
-        self.criterion = torch.nn.MSELoss()
-
-    def forward(self, x, gt):
-        gt = gt * self.granularity
-        est_x = self.conv(x)
-        return self.criterion(est_x, gt)
-
-
-# class Conv_MSELoss(nn.Module):
-#     def __init__(self, conv, granularity):
-#         super(Conv_MSELoss, self).__init__()
-#         self.conv = conv
-#         self.granularity = granularity / 10
-#         self.criterion = torch.nn.MSELoss()
-#
-#     def forward(self, x, gt):
-#         int_x = x.max(dim=1)[1].unsqueeze(0).type(torch.cuda.FloatTensor)
-#         gt = gt * self.granularity
-#         est_x = self.conv(int_x)
-#         return self.criterion(est_x, gt)
-
-
 class Discrete_CELoss(nn.Module):
     def __init__(self, granularity):
         super(Discrete_CELoss, self).__init__()
@@ -60,3 +33,18 @@ class CombinedLoss(nn.Module):
         self.writer.add_scalar('train_loss/CE', loss1.item())
         self.writer.add_scalar('train_loss/MSE', loss2.item())
         return loss1 + 0.1 * loss2
+
+
+class LogDepthLoss(nn.Module):
+    def __init__(self):
+        super(LogDepthLoss, self).__init__()
+
+    def forward(self, x, gt):
+        N = x.size(2) * x.size(3)
+        d = x.log() - gt.log()
+        ddx = torch.zeros(x.size())
+        ddy = torch.zeros(x.size())
+        ddx[:,:,:-1,:] = d[:,:,1:,:] - d[:,:,:-1,:]
+        ddy[:,:,:,:-1] = d[:,:,:,1:] - d[:,:,:,:-1]
+        loss = 1/N**2 * torch.sum(d**2, dim=(2, 3)) - 1/(2*N**2) * d.sum(dim=(2,3))**2 + 1/N * (ddx**2 + ddy**2).sum(dim=(2,3))
+        return loss.mean()
