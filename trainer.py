@@ -157,7 +157,7 @@ def main():
                  'test_cut': [1050, None],
                  'val_cut': [1000, 1050]}
 
-    print('====FCN8s for Depth Exp====')
+    print('====' + args.net + ' for Depth Exp====')
     print('Validation: ' + str(args.valid))
     print('Net parameters: ' + str(args.param))
     print('#Epoch: {:d}, #Batch: {:d}'.format(args.epoch, args.batch))
