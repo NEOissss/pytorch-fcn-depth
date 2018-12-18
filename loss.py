@@ -42,8 +42,8 @@ class LogDepthLoss(nn.Module):
     def forward(self, x, gt):
         N = x.size(2) * x.size(3)
         d = x.log() - gt.log()
-        ddx = torch.zeros(x.size())
-        ddy = torch.zeros(x.size())
+        ddx = torch.zeros(x.size()).cuda()
+        ddy = torch.zeros(x.size()).cuda()
         ddx[:,:,:-1,:] = d[:,:,1:,:] - d[:,:,:-1,:]
         ddy[:,:,:,:-1] = d[:,:,:,1:] - d[:,:,:,:-1]
         loss = 1/N**2 * torch.sum(d**2, dim=(2, 3)) - 1/(2*N**2) * d.sum(dim=(2,3))**2 + 1/N * (ddx**2 + ddy**2).sum(dim=(2,3))
